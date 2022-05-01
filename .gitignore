@@ -1,0 +1,5 @@
+/src/secure.py
+/config.toml
+.DS_Store
+*.session
+__pycache__/
