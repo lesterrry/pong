@@ -12,6 +12,7 @@ import gc
 
 CONFIG_FILE_NAME = "config"  # Your .toml config file name (like 'file')
 VERSION = "0.1.0-beta"
+FOOTER = "\n---------------\nSent automatically with [Pong](https://github.com/lesterrry/pong)"
 
 if "-V" in sys.argv or "--version" in sys.argv:
 	print(f"Pong v{VERSION}")
@@ -69,11 +70,10 @@ async def handler(event):
 		return
 	if 'for_known' in config['messages'] and (str(sender.id) in known_ids or sender.username in known_usernames or sender.phone in known_phones):
 		print("Will reply with", config['messages']['for_known'])
+		# await event.reply(config['messages']['for_known'] + FOOTER, link_preview=False)
 	elif 'for_others' in config['messages']:
 		print("Will reply with", config['messages']['for_others'])
-	return
-	# await event.reply('yo')
-	print(event.peer_id)
+		await event.reply(config['messages']['for_others'] + FOOTER, link_preview=False)
 
 client.connect()
 if not client.is_user_authorized() and not setup_mode:
