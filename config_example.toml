@@ -1,0 +1,16 @@
+# Specify api data from my.telegram.org
+[api]
+id = ""
+hash = ""
+
+# Specify responses to send
+# Remove as a whole if not needed
+[messages]
+for_known = "hey friends!"
+for_others = "yo i dont know you"
+
+# Specify people you know
+# Arrays accept usernames (like '@user'), phone numbers (like +1234...), ids (like 123)
+[contacts]
+known = [ "@user1", "+12345678901", "12345678" ]
+ignore = [ "@user2" ]
