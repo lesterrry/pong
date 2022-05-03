@@ -6,6 +6,7 @@ COPYRIGHT LESTER COVEY (me@lestercovey.ml),
 from os import path
 from telethon import TelegramClient, events, sync
 from telethon.tl.types import PeerUser
+from datetime import datetime
 import toml
 import sys
 import gc
@@ -27,6 +28,7 @@ sys.excepthook = my_except_hook
 file_path = path.dirname(path.dirname(path.realpath(__file__)))
 setup_mode = False
 config = toml.load(f"{file_path}/{CONFIG_FILE_NAME}.toml")
+responded_to = []
 
 if "-s" in sys.argv or "--setup" in sys.argv:
 	setup_mode = True
@@ -35,11 +37,30 @@ if not path.isfile(file_path + "/session.session") and not setup_mode:
 
 client = TelegramClient(file_path + "/session", config['api']['id'], config['api']['hash'])
 
+def log(text):
+	file_exists = path.isfile(file_path + "/log.txt")
+	with open(file_path + "/log.txt", 'a' if file_exists else 'w') as f:
+		dated = datetime.now().strftime("[%a %d %b %H:%M] ")
+		f.write(dated + text + "\n")
+def log_response(sender, incoming):
+	sender_name = ""
+	if sender.first_name is not None and sender.last_name is not None:
+		sender_name = f"{sender.first_name} {sender.last_name}"
+	elif sender.username is not None:
+		sender_name = "@" + sender.username
+	elif sender.phone is not None:
+		sender_name = "+" + sender.phone
+	else:
+		sender_name = f"<{sender.id}>"
+	log(f"Responding to {sender_name} who wrote: '{incoming}'")
+
 @client.on(events.NewMessage(incoming=True))
 async def handler(event):
 	if type(event.peer_id) is not PeerUser:
 		return
 	sender = await client.get_entity(event.peer_id)
+	# FIXME:
+	# Dumbass approach
 	known_phones = []
 	known_ids = []
 	known_usernames = []
@@ -65,19 +86,27 @@ async def handler(event):
 		or sender.support 
 		or str(sender.id) in ignore_ids 
 		or sender.username in ignore_usernames 
-		or sender.phone in ignore_phones):
+		or sender.phone in ignore_phones
+		or (config['messages']['respond_only_once'] and sender.id in responded_to)):
 		print("Will not reply")
 		return
 	if 'for_known' in config['messages'] and (str(sender.id) in known_ids or sender.username in known_usernames or sender.phone in known_phones):
-		print("Will reply with", config['messages']['for_known'])
 		# await event.reply(config['messages']['for_known'] + FOOTER, link_preview=False)
+		responded_to.append(sender.id)
 	elif 'for_others' in config['messages']:
+		if config['service']['logging_enabled']:
+			log_response(sender, event.message.text)
 		print("Will reply with", config['messages']['for_others'])
-		await event.reply(config['messages']['for_others'] + FOOTER, link_preview=False)
+		# await event.reply(config['messages']['for_others'] + FOOTER, link_preview=False)
+		responded_to.append(sender.id)
 
 client.connect()
 if not client.is_user_authorized() and not setup_mode:
 	raise Exception("You are unauthorized. Retry with '-s' or '--setup' to authorize")
-del CONFIG_FILE_NAME, VERSION, file_path, setup_mode
+log_str = f"Starting Pong v{VERSION}..."
+print(log_str)
+if config['service']['logging_enabled']:
+	log(log_str)
+del CONFIG_FILE_NAME, VERSION, setup_mode, log_str
 gc.collect()
 client.start().loop.run_forever()

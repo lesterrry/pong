@@ -2,4 +2,6 @@
 /config.toml
 .DS_Store
 *.session
+*.session-journal
+log.*
 __pycache__/

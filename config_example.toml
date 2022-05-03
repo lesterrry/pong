@@ -6,11 +6,17 @@ hash = ""
 # Specify responses to send
 # Remove as a whole if not needed
 [messages]
+respond_only_once = true
 for_known = "hey friends!"
 for_others = "yo i dont know you"
 
 # Specify people you know
 # Arrays accept usernames (like '@user'), phone numbers (like +1234...), ids (like 123)
+# Leave array empty if not needed
 [contacts]
 known = [ "@user1", "+12345678901", "12345678" ]
 ignore = [ "@user2" ]
+
+# If you enable logs, you'll be able to see all messages Pong responded to
+[service]
+logging_enabled = true
