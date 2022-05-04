@@ -12,7 +12,7 @@ import sys
 import gc
 
 CONFIG_FILE_NAME = "config"  # Your .toml config file name (like 'file')
-VERSION = "0.1.0-beta"
+VERSION = "0.1.0-beta2"
 FOOTER = "\n---------------\nSent automatically with [Pong](https://github.com/lesterrry/pong)"
 
 if "-V" in sys.argv or "--version" in sys.argv:
@@ -21,7 +21,12 @@ if "-V" in sys.argv or "--version" in sys.argv:
 
 def my_except_hook(exctype, value, traceback):
 	if exctype is not KeyboardInterrupt:
-		print(f"FATAL: {value}")
+		errstr = f"FATAL: {value}"
+		print(errstr)
+		try:
+			log(errstr)
+		except:
+			()
 		exit(1)
 sys.excepthook = my_except_hook
 
