@@ -12,7 +12,7 @@ import sys
 import gc
 
 CONFIG_FILE_NAME = "config"  # Your .toml config file name (like 'file')
-VERSION = "0.1.0-beta2"
+VERSION = "0.1.0"
 FOOTER = "\n---------------\nSent automatically with [Pong](https://github.com/lesterrry/pong)"
 
 if "-V" in sys.argv or "--version" in sys.argv:
@@ -93,17 +93,15 @@ async def handler(event):
 		or sender.username in ignore_usernames 
 		or sender.phone in ignore_phones
 		or (config['messages']['respond_only_once'] and sender.id in responded_to)):
-		print("Will not reply")
 		return
 	if 'for_known' in config['messages'] and (str(sender.id) in known_ids or sender.username in known_usernames or sender.phone in known_phones):
-		# await event.reply(config['messages']['for_known'] + FOOTER, link_preview=False)
+		await event.reply(config['messages']['for_known'] + FOOTER, link_preview=False)
 		responded_to.append(sender.id)
 	elif 'for_others' in config['messages']:
-		if config['service']['logging_enabled']:
-			log_response(sender, event.message.text)
-		print("Will reply with", config['messages']['for_others'])
-		# await event.reply(config['messages']['for_others'] + FOOTER, link_preview=False)
+		await event.reply(config['messages']['for_others'] + FOOTER, link_preview=False)
 		responded_to.append(sender.id)
+	if config['service']['logging_enabled']:
+		log_response(sender, event.message.text)
 
 client.connect()
 if not client.is_user_authorized() and not setup_mode:
