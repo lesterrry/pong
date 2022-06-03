@@ -12,6 +12,7 @@ for_others = "Hey stranger!"
 
 # Specify people you know
 # Arrays accept usernames (like '@user'), phone numbers (like +1234...), ids (like 123)
+# Do not remove fields, leave them empty
 [contacts]
 known = [ "@user", "+123456789", "123456789" ]
 ignore = [ "+123456789" ]
