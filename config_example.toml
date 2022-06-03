@@ -4,19 +4,23 @@ id = ""
 hash = ""
 
 # Specify responses to send
-# Remove as a whole if not needed
+# Remove fields as a whole if not needed
 [messages]
 respond_only_once = true
-for_known = "hey friends!"
-for_others = "yo i dont know you"
+for_known = "Hey you!"
+for_others = "Hey stranger!"
 
 # Specify people you know
 # Arrays accept usernames (like '@user'), phone numbers (like +1234...), ids (like 123)
-# Leave array empty if not needed
 [contacts]
-known = [ "@user1", "+12345678901", "12345678" ]
-ignore = [ "@user2" ]
+known = [ "@user", "+123456789", "123456789" ]
+ignore = [ "+123456789" ]
 
-# If you enable logs, you'll be able to see all messages Pong responded to
 [service]
-logging_enabled = true
+# If you enable logs, all messages Pong responded to will be saved to a local file
+logging_enabled = false
+# You may also enable integration with Cronitor
+cronitor_integrated = true
+cronitor_key = ""
+cronitor_id = ""
+cronitor_hostname = "iMac"

@@ -12,7 +12,7 @@ import sys
 import gc
 
 CONFIG_FILE_NAME = "config"  # Your .toml config file name (like 'file')
-VERSION = "0.1.1"
+VERSION = "0.1.2"
 FOOTER = "\n---------------\nSent automatically with [Pong](https://github.com/lesterrry/pong)"
 
 if "-V" in sys.argv or "--version" in sys.argv:
@@ -34,14 +34,12 @@ file_path = path.dirname(path.dirname(path.realpath(__file__)))
 setup_mode = False
 config = toml.load(f"{file_path}/{CONFIG_FILE_NAME}.toml")
 responded_to = []
+times_responded = 0
 
 if "-s" in sys.argv or "--setup" in sys.argv:
 	setup_mode = True
 if not path.isfile(file_path + "/session.session") and not setup_mode:
 	raise Exception("Session file was not found. Retry with '-s' or '--setup' to create new")
-if config['service']['cronitor_integrated']:
-	import requests
-	import asyncio
 
 client = TelegramClient(file_path + "/session", config['api']['id'], config['api']['hash'], app_version=VERSION)
 
@@ -67,18 +65,21 @@ def log_response(sender, incoming):
 	log(get_log_string(sender, incoming))
 
 if config['service']['cronitor_integrated']:
+	import requests
+	import asyncio
 	async def cronitor_heartbeat():
 		while True:
 			cronitor_ping()
 			await asyncio.sleep(300)
 	def cronitor_ping():
-		requests.get(f"https://cronitor.link/p/{config['service']['cronitor_key']}/{config['service']['cronitor_id']}", timeout=10)
-	def cronitor_inform(sender, incoming):
+		requests.get(f"https://cronitor.link/p/{config['service']['cronitor_key']}/{config['service']['cronitor_id']}?host={config['service']['cronitor_hostname']}", timeout=10)
+	def cronitor_inform(sender, incoming, tr):
 		message = get_log_string(sender, incoming)
-		requests.get(f"https://cronitor.link/p/{config['service']['cronitor_key']}/{config['service']['cronitor_id']}?message={message}", timeout=10)
+		requests.get(f"https://cronitor.link/p/{config['service']['cronitor_key']}/{config['service']['cronitor_id']}?host={config['service']['cronitor_hostname']}&message={message}&metric=count:{tr}", timeout=10)
 
 @client.on(events.NewMessage(incoming=True))
 async def handler(event):
+	global times_responded
 	if type(event.peer_id) is not PeerUser:
 		return
 	sender = await client.get_entity(event.peer_id)
@@ -118,10 +119,11 @@ async def handler(event):
 	elif 'for_others' in config['messages']:
 		await event.reply(config['messages']['for_others'] + FOOTER, link_preview=False)
 		responded_to.append(sender.id)
+	times_responded += 1
 	if config['service']['logging_enabled']:
 		log_response(sender, event.message.text)
 	if config['service']['cronitor_integrated']:
-		cronitor_inform(sender, event.message.text)
+		cronitor_inform(sender, event.message.text, times_responded)
 
 client.connect()
 if not client.is_user_authorized() and not setup_mode:
