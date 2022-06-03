@@ -13,7 +13,7 @@ import sys
 import gc
 
 CONFIG_FILE_NAME = "config"  # Your .toml config file name (like 'file')
-VERSION = "0.1.2.rev1"
+VERSION = "0.1.3"
 FOOTER = "\n---------------\nSent automatically with [Pong](https://github.com/lesterrry/pong)"
 
 if "-v" in sys.argv or "--version" in sys.argv:
@@ -26,6 +26,8 @@ def my_except_hook(exctype, value, traceback):
 		print(errstr, file=sys.stderr)
 		try:
 			log(errstr)
+			if config['service']['cronitor_integrated']:
+				cronitor_fatal(errstr)
 		except:
 			()
 		exit(1)
@@ -73,10 +75,12 @@ if config['service']['cronitor_integrated']:
 			cronitor_ping()
 			await asyncio.sleep(300)
 	def cronitor_ping():
-		requests.get(f"https://cronitor.link/p/{config['service']['cronitor_key']}/{config['service']['cronitor_id']}?host={config['service']['cronitor_hostname']}", timeout=10)
+		requests.get(f"https://cronitor.link/p/{config['service']['cronitor_key']}/{config['service']['cronitor_id']}?host={config['service']['cronitor_hostname']}&state=ok", timeout=10)
 	def cronitor_inform(sender, incoming, tr):
 		message = get_log_string(sender, incoming)
-		requests.get(f"https://cronitor.link/p/{config['service']['cronitor_key']}/{config['service']['cronitor_id']}?host={config['service']['cronitor_hostname']}&message={message}&metric=count:{tr}", timeout=10)
+		requests.get(f"https://cronitor.link/p/{config['service']['cronitor_key']}/{config['service']['cronitor_id']}?host={config['service']['cronitor_hostname']}&message={message}&metric=count:{tr}&state=ok", timeout=10)
+	def cronitor_fatal(message):
+		requests.get(f"https://cronitor.link/p/{config['service']['cronitor_key']}/{config['service']['cronitor_id']}?host={config['service']['cronitor_hostname']}&message={message}&state=fail", timeout=10)
 
 @client.on(events.NewMessage(incoming=True))
 async def handler(event):
