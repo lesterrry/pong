@@ -26,7 +26,7 @@ def my_except_hook(exctype, value, traceback):
 		print(errstr, file=sys.stderr)
 		try:
 			log(errstr)
-			cronitor_fatal(errstr)
+			cronitor_informstate(errstr, "fail")
 		except:
 			()
 		exit(1)
@@ -70,16 +70,17 @@ if config['service']['cronitor_integrated']:
 	import requests
 	import asyncio
 	async def cronitor_heartbeat():
+		await asyncio.sleep(300)
 		while True:
 			cronitor_ping()
 			await asyncio.sleep(300)
 	def cronitor_ping():
-		requests.get(f"https://cronitor.link/p/{config['service']['cronitor_key']}/{config['service']['cronitor_id']}?host={config['service']['cronitor_hostname']}&state=ok", timeout=10)
+		requests.get(f"https://cronitor.link/p/{config['service']['cronitor_key']}/{config['service']['cronitor_id']}?host={config['service']['cronitor_hostname']}", timeout=10)
 	def cronitor_inform(sender, incoming, tr):
 		message = get_log_string(sender, incoming)
-		requests.get(f"https://cronitor.link/p/{config['service']['cronitor_key']}/{config['service']['cronitor_id']}?host={config['service']['cronitor_hostname']}&message={message}&metric=count:{tr}&state=ok", timeout=10)
-	def cronitor_fatal(message):
-		requests.get(f"https://cronitor.link/p/{config['service']['cronitor_key']}/{config['service']['cronitor_id']}?host={config['service']['cronitor_hostname']}&message={message}&state=fail", timeout=10)
+		requests.get(f"https://cronitor.link/p/{config['service']['cronitor_key']}/{config['service']['cronitor_id']}?host={config['service']['cronitor_hostname']}&message={message}&metric=count:{tr}", timeout=10)
+	def cronitor_informstate(message, state):
+		requests.get(f"https://cronitor.link/p/{config['service']['cronitor_key']}/{config['service']['cronitor_id']}?host={config['service']['cronitor_hostname']}&message={message}&state={state}", timeout=10)
 
 @client.on(events.NewMessage(incoming=True))
 async def handler(event):
@@ -136,6 +137,8 @@ log_str = f"Starting Pong v{VERSION}..."
 print(log_str)
 if config['service']['logging_enabled']:
 	log(log_str)
+if config['service']['cronitor_integrated']:
+	cronitor_informstate(log_str, "ok")
 del CONFIG_FILE_NAME, VERSION, setup_mode, log_str
 gc.collect()
 loop = client.start().loop
