@@ -26,8 +26,7 @@ def my_except_hook(exctype, value, traceback):
 		print(errstr, file=sys.stderr)
 		try:
 			log(errstr)
-			if config['service']['cronitor_integrated']:
-				cronitor_fatal(errstr)
+			cronitor_fatal(errstr)
 		except:
 			()
 		exit(1)
