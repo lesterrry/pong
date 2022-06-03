@@ -12,7 +12,7 @@ import sys
 import gc
 
 CONFIG_FILE_NAME = "config"  # Your .toml config file name (like 'file')
-VERSION = "0.1.0"
+VERSION = "0.1.1"
 FOOTER = "\n---------------\nSent automatically with [Pong](https://github.com/lesterrry/pong)"
 
 if "-V" in sys.argv or "--version" in sys.argv:
@@ -22,7 +22,7 @@ if "-V" in sys.argv or "--version" in sys.argv:
 def my_except_hook(exctype, value, traceback):
 	if exctype is not KeyboardInterrupt:
 		errstr = f"FATAL: {value}"
-		print(errstr)
+		print(errstr, file=sys.stderr)
 		try:
 			log(errstr)
 		except:
@@ -39,15 +39,18 @@ if "-s" in sys.argv or "--setup" in sys.argv:
 	setup_mode = True
 if not path.isfile(file_path + "/session.session") and not setup_mode:
 	raise Exception("Session file was not found. Retry with '-s' or '--setup' to create new")
+if config['service']['cronitor_integrated']:
+	import requests
+	import asyncio
 
-client = TelegramClient(file_path + "/session", config['api']['id'], config['api']['hash'])
+client = TelegramClient(file_path + "/session", config['api']['id'], config['api']['hash'], app_version=VERSION)
 
 def log(text):
 	file_exists = path.isfile(file_path + "/log.txt")
 	with open(file_path + "/log.txt", 'a' if file_exists else 'w') as f:
 		dated = datetime.now().strftime("[%a %d %b %H:%M] ")
 		f.write(dated + text + "\n")
-def log_response(sender, incoming):
+def get_sender_name(sender):
 	sender_name = ""
 	if sender.first_name is not None and sender.last_name is not None:
 		sender_name = f"{sender.first_name} {sender.last_name}"
@@ -57,7 +60,22 @@ def log_response(sender, incoming):
 		sender_name = "+" + sender.phone
 	else:
 		sender_name = f"<{sender.id}>"
-	log(f"Responding to {sender_name} who wrote: '{incoming}'")
+	return sender_name
+def get_log_string(sender, incoming):
+	return f"Responding to {get_sender_name(sender)} who wrote: '{incoming}'"
+def log_response(sender, incoming):
+	log(get_log_string(sender, incoming))
+
+if config['service']['cronitor_integrated']:
+	async def cronitor_heartbeat():
+		while True:
+			cronitor_ping()
+			await asyncio.sleep(300)
+	def cronitor_ping():
+		requests.get(f"https://cronitor.link/p/{config['service']['cronitor_key']}/{config['service']['cronitor_id']}", timeout=10)
+	def cronitor_inform(sender, incoming):
+		message = get_log_string(sender, incoming)
+		requests.get(f"https://cronitor.link/p/{config['service']['cronitor_key']}/{config['service']['cronitor_id']}?message={message}", timeout=10)
 
 @client.on(events.NewMessage(incoming=True))
 async def handler(event):
@@ -102,6 +120,8 @@ async def handler(event):
 		responded_to.append(sender.id)
 	if config['service']['logging_enabled']:
 		log_response(sender, event.message.text)
+	if config['service']['cronitor_integrated']:
+		cronitor_inform(sender, event.message.text)
 
 client.connect()
 if not client.is_user_authorized() and not setup_mode:
@@ -112,4 +132,7 @@ if config['service']['logging_enabled']:
 	log(log_str)
 del CONFIG_FILE_NAME, VERSION, setup_mode, log_str
 gc.collect()
-client.start().loop.run_forever()
+loop = client.start().loop
+if config['service']['cronitor_integrated']:
+	loop.create_task(cronitor_heartbeat())
+loop.run_forever()
