@@ -13,7 +13,7 @@ import sys
 import gc
 
 CONFIG_FILE_NAME = "config"  # Your .toml config file name (like 'file')
-VERSION = "0.2.0-beta"
+VERSION = "0.2.1-beta"
 FOOTER = "\n---------------\nSent automatically with [Pong](https://github.com/lesterrry/pong)"
 
 if "-v" in sys.argv or "--version" in sys.argv:
@@ -22,6 +22,8 @@ if "-v" in sys.argv or "--version" in sys.argv:
 
 def my_except_hook(exctype, value, traceback=None):
 	if exctype is not KeyboardInterrupt:
+		global planned_exit
+		planned_exit = True
 		errstr = f"FATAL: {value}"
 		print(errstr, file=sys.stderr)
 		try:
@@ -37,6 +39,7 @@ setup_mode = False
 config = toml.load(f"{file_path}/{CONFIG_FILE_NAME}.toml")
 responded_to = []
 times_responded = 0
+planned_exit = False
 
 if "-s" in sys.argv or "--setup" in sys.argv:
 	setup_mode = True
@@ -69,6 +72,7 @@ def log_response(sender, incoming):
 if config['service']['cronitor_integrated']:
 	import requests
 	import asyncio
+	import atexit
 	async def cronitor_heartbeat():
 		await asyncio.sleep(300)
 		while True:
@@ -81,14 +85,22 @@ if config['service']['cronitor_integrated']:
 		requests.get(f"https://cronitor.link/p/{config['service']['cronitor_key']}/{config['service']['cronitor_id']}?host={config['service']['cronitor_hostname']}&message={message}&metric=count:{tr}", timeout=10)
 	def cronitor_informstate(message, state):
 		requests.get(f"https://cronitor.link/p/{config['service']['cronitor_key']}/{config['service']['cronitor_id']}?host={config['service']['cronitor_hostname']}&message={message}&state={state}", timeout=10)
+	def cronitor_atexit():
+		if not planned_exit:
+			cronitor_informstate(f"Exiting Pong...", "complete")
+
+	atexit.register(cronitor_atexit)
 
 @client.on(events.NewMessage(incoming=True))
 async def handler(event):
+	global times_responded
+	if type(event.peer_id) is not PeerUser:
+		return
 	try:
-		global times_responded
-		if type(event.peer_id) is not PeerUser:
-			return
 		sender = await client.get_entity(event.peer_id)
+	except:
+		return
+	try:
 		# FIXME:
 		# Dumbass approach
 		known_phones = []
