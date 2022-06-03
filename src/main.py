@@ -138,7 +138,7 @@ print(log_str)
 if config['service']['logging_enabled']:
 	log(log_str)
 if config['service']['cronitor_integrated']:
-	cronitor_informstate(log_str, "ok")
+	cronitor_informstate(log_str, "run")
 del CONFIG_FILE_NAME, VERSION, setup_mode, log_str
 gc.collect()
 loop = client.start().loop
