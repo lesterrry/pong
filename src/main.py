@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 '''''''''''''''''''''''''''''
 COPYRIGHT LESTER COVEY (me@lestercovey.ml),
 2022
@@ -12,10 +13,10 @@ import sys
 import gc
 
 CONFIG_FILE_NAME = "config"  # Your .toml config file name (like 'file')
-VERSION = "0.1.2"
+VERSION = "0.1.2.rev1"
 FOOTER = "\n---------------\nSent automatically with [Pong](https://github.com/lesterrry/pong)"
 
-if "-V" in sys.argv or "--version" in sys.argv:
+if "-v" in sys.argv or "--version" in sys.argv:
 	print(f"Pong v{VERSION}")
 	exit(0)
 
