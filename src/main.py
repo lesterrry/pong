@@ -13,14 +13,14 @@ import sys
 import gc
 
 CONFIG_FILE_NAME = "config"  # Your .toml config file name (like 'file')
-VERSION = "0.1.3"
+VERSION = "0.2.0-beta"
 FOOTER = "\n---------------\nSent automatically with [Pong](https://github.com/lesterrry/pong)"
 
 if "-v" in sys.argv or "--version" in sys.argv:
 	print(f"Pong v{VERSION}")
 	exit(0)
 
-def my_except_hook(exctype, value, traceback):
+def my_except_hook(exctype, value, traceback=None):
 	if exctype is not KeyboardInterrupt:
 		errstr = f"FATAL: {value}"
 		print(errstr, file=sys.stderr)
@@ -84,51 +84,55 @@ if config['service']['cronitor_integrated']:
 
 @client.on(events.NewMessage(incoming=True))
 async def handler(event):
-	global times_responded
-	if type(event.peer_id) is not PeerUser:
-		return
-	sender = await client.get_entity(event.peer_id)
-	# FIXME:
-	# Dumbass approach
-	known_phones = []
-	known_ids = []
-	known_usernames = []
-	for i in config['contacts']['known']:
-		if i[0] == '@':
-			known_usernames.append(i[1:])
-		if i[0] == '+':
-			known_phones.append(i[1:])
-		else:
-			known_ids.append(i)
-	ignore_phones = []
-	ignore_ids = []
-	ignore_usernames = []
-	for i in config['contacts']['ignore']:
-		if i[0] == '@':
-			ignore_usernames.append(i[1:])
-		if i[0] == '+':
-			ignore_phones.append(i[1:])
-		else:
-			ignore_ids.append(i)
-	if (sender.is_self 
-		or sender.bot 
-		or sender.support 
-		or str(sender.id) in ignore_ids 
-		or sender.username in ignore_usernames 
-		or sender.phone in ignore_phones
-		or (config['messages']['respond_only_once'] and sender.id in responded_to)):
-		return
-	if 'for_known' in config['messages'] and (str(sender.id) in known_ids or sender.username in known_usernames or sender.phone in known_phones):
-		await event.reply(config['messages']['for_known'] + FOOTER, link_preview=False)
-		responded_to.append(sender.id)
-	elif 'for_others' in config['messages']:
-		await event.reply(config['messages']['for_others'] + FOOTER, link_preview=False)
-		responded_to.append(sender.id)
-	times_responded += 1
-	if config['service']['logging_enabled']:
-		log_response(sender, event.message.text)
-	if config['service']['cronitor_integrated']:
-		cronitor_inform(sender, event.message.text, times_responded)
+	try:
+		a = 1 / 0
+		global times_responded
+		if type(event.peer_id) is not PeerUser:
+			return
+		sender = await client.get_entity(event.peer_id)
+		# FIXME:
+		# Dumbass approach
+		known_phones = []
+		known_ids = []
+		known_usernames = []
+		for i in config['contacts']['known']:
+			if i[0] == '@':
+				known_usernames.append(i[1:])
+			if i[0] == '+':
+				known_phones.append(i[1:])
+			else:
+				known_ids.append(i)
+		ignore_phones = []
+		ignore_ids = []
+		ignore_usernames = []
+		for i in config['contacts']['ignore']:
+			if i[0] == '@':
+				ignore_usernames.append(i[1:])
+			if i[0] == '+':
+				ignore_phones.append(i[1:])
+			else:
+				ignore_ids.append(i)
+		if (sender.is_self 
+			or sender.bot 
+			or sender.support 
+			or str(sender.id) in ignore_ids 
+			or sender.username in ignore_usernames 
+			or sender.phone in ignore_phones
+			or (config['messages']['respond_only_once'] and sender.id in responded_to)):
+			return
+		if 'for_known' in config['messages'] and (str(sender.id) in known_ids or sender.username in known_usernames or sender.phone in known_phones):
+			await event.reply(config['messages']['for_known'] + FOOTER, link_preview=False)
+			responded_to.append(sender.id)
+		elif 'for_others' in config['messages']:
+			await event.reply(config['messages']['for_others'] + FOOTER, link_preview=False)
+			responded_to.append(sender.id)
+		times_responded += 1
+		if config['service']['logging_enabled']:
+			log_response(sender, event.message.text)
+		if config['service']['cronitor_integrated']:
+			cronitor_inform(sender, event.message.text, times_responded)
+	except Exception as e:
+		my_except_hook(type(e), e)
 
 client.connect()
 if not client.is_user_authorized() and not setup_mode:
