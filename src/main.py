@@ -85,7 +85,6 @@ if config['service']['cronitor_integrated']:
 @client.on(events.NewMessage(incoming=True))
 async def handler(event):
 	try:
-		a = 1 / 0
 		global times_responded
 		if type(event.peer_id) is not PeerUser:
 			return
