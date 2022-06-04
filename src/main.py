@@ -13,9 +13,7 @@ from cronitor_logging import Cronitor, cronitor_heartbeat
 from log import log_response, setup_excepthook
 from utils import Phonebook, UserType
 
-
 CONFIG_FILE_NAME = "config"  # Your .toml config file name (like 'file')
-
 VERSION = "0.3.0-beta"
 
 if "-v" in sys.argv or "--version" in sys.argv:
