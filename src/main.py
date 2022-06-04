@@ -3,13 +3,15 @@
 COPYRIGHT LESTER COVEY (me@lestercovey.ml),
 2022
 
+Logging made by ChernV (@otter18),
+2022
 '''''''''''''''''''''''''''''
 from os import path
 from telethon import TelegramClient, events, sync
 from telethon.tl.types import PeerUser
-from datetime import datetime
 import toml
 import sys
+import logging
 import gc
 
 CONFIG_FILE_NAME = "config"  # Your .toml config file name (like 'file')
@@ -28,14 +30,12 @@ def my_except_hook(exctype, value, traceback=None):
 		errstr = f"FATAL: {value}"
 		print(errstr, file=sys.stderr)
 		try:
-			log(errstr)
+			logging.exception(errstr)
 			cronitor_informstate(errstr, "fail")
 		except:
 			()
 		exit(1)
 
-
-sys.excepthook = my_except_hook
 
 file_path = path.dirname(path.dirname(path.realpath(__file__)))
 setup_mode = False
@@ -44,19 +44,18 @@ responded_to = []
 times_responded = 0
 planned_exit = False
 
+# logging setup
+logging.basicConfig(filename=path.join(file_path, 'log.txt'), encoding='utf-8', level=logging.INFO,
+					format='[%(asctime)s] %(levelname)s: %(message)s', datefmt='%a %d %b %H:%M')
+
+sys.excepthook = my_except_hook
+
 if "-s" in sys.argv or "--setup" in sys.argv:
 	setup_mode = True
 if not path.isfile(file_path + "/session.session") and not setup_mode:
 	raise FileNotFoundError("Session file was not found. Retry with '-s' or '--setup' to create new")
 
 client = TelegramClient(file_path + "/session", config['api']['id'], config['api']['hash'], app_version=VERSION)
-
-
-def log(text):
-	file_exists = path.isfile(file_path + "/log.txt")
-	with open(file_path + "/log.txt", 'a' if file_exists else 'w') as f:
-		dated = datetime.now().strftime("[%a %d %b %H:%M] ")
-		f.write(dated + text + "\n")
 
 
 def get_sender_name(sender):
@@ -77,7 +76,7 @@ def get_log_string(sender, incoming):
 
 
 def log_response(sender, incoming):
-	log(get_log_string(sender, incoming))
+	logging.info(get_log_string(sender, incoming))
 
 
 if config['service']['cronitor_integrated']:
@@ -182,7 +181,7 @@ if not client.is_user_authorized() and not setup_mode:
 log_str = f"Starting Pong v{VERSION}..."
 print(log_str)
 if config['service']['logging_enabled']:
-	log(log_str)
+	logging.info(log_str)
 if config['service']['cronitor_integrated']:
 	cronitor_informstate(log_str, "run")
 del CONFIG_FILE_NAME, VERSION, setup_mode, log_str
