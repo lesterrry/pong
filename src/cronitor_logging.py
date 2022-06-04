@@ -1,7 +1,9 @@
 #  Copyright (c) Lester Covey (me@lestercovey.ml) & ChernV (@otter18), 2022
 
-import requests
 import asyncio
+
+import requests
+
 from utils import get_log_string
 
 
@@ -44,5 +46,3 @@ class Cronitor:
 			f"&state={state}",
 			timeout=10
 		)
-
-
