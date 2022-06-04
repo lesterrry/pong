@@ -1,10 +1,8 @@
 #!/usr/bin/env python3
 '''''''''''''''''''''''''''''
-COPYRIGHT LESTER COVEY (me@lestercovey.ml),
+COPYRIGHT LESTER COVEY (me@lestercovey.ml) & ChernV (@otter18),
 2022
 
-Logging made by ChernV (@otter18),
-2022
 '''''''''''''''''''''''''''''
 from os import path
 from telethon import TelegramClient, events, sync
@@ -14,13 +12,23 @@ import sys
 import logging
 import gc
 
+
 CONFIG_FILE_NAME = "config"  # Your .toml config file name (like 'file')
-VERSION = "0.2.2-beta"
+VERSION = "0.3.0-beta"
 FOOTER = "\n---------------\nSent automatically with [Pong](https://github.com/lesterrry/pong)"
+
 
 if "-v" in sys.argv or "--version" in sys.argv:
 	print(f"Pong v{VERSION}")
 	exit(0)
+
+
+file_path = path.dirname(path.dirname(path.realpath(__file__)))
+setup_mode = False
+config = toml.load(f"{file_path}/{CONFIG_FILE_NAME}.toml")
+responded_to = []
+times_responded = 0
+planned_exit = False
 
 
 def my_except_hook(exctype, value, traceback=None):
@@ -37,14 +45,7 @@ def my_except_hook(exctype, value, traceback=None):
 		exit(1)
 
 
-file_path = path.dirname(path.dirname(path.realpath(__file__)))
-setup_mode = False
-config = toml.load(f"{file_path}/{CONFIG_FILE_NAME}.toml")
-responded_to = []
-times_responded = 0
-planned_exit = False
-
-# logging setup
+# Logging setup
 logging.basicConfig(filename=path.join(file_path, 'log.txt'), encoding='utf-8', level=logging.INFO,
 					format='[%(asctime)s] %(levelname)s: %(message)s', datefmt='%a %d %b %H:%M')
 
@@ -59,7 +60,6 @@ client = TelegramClient(file_path + "/session", config['api']['id'], config['api
 
 
 def get_sender_name(sender):
-	sender_name = ""
 	if sender.first_name is not None and sender.last_name is not None:
 		sender_name = f"{sender.first_name} {sender.last_name}"
 	elif sender.username is not None:
@@ -91,12 +91,10 @@ if config['service']['cronitor_integrated']:
 			cronitor_ping()
 			await asyncio.sleep(300)
 
-
 	def cronitor_ping():
 		requests.get(
 			f"https://cronitor.link/p/{config['service']['cronitor_key']}/{config['service']['cronitor_id']}?host={config['service']['cronitor_hostname']}",
 			timeout=10)
-
 
 	def cronitor_inform(sender, incoming, tr):
 		message = get_log_string(sender, incoming)
@@ -104,12 +102,10 @@ if config['service']['cronitor_integrated']:
 			f"https://cronitor.link/p/{config['service']['cronitor_key']}/{config['service']['cronitor_id']}?host={config['service']['cronitor_hostname']}&message={message}&metric=count:{tr}",
 			timeout=10)
 
-
 	def cronitor_informstate(message, state):
 		requests.get(
 			f"https://cronitor.link/p/{config['service']['cronitor_key']}/{config['service']['cronitor_id']}?host={config['service']['cronitor_hostname']}&message={message}&state={state}",
 			timeout=10)
-
 
 	def cronitor_atexit():
 		if not planned_exit:
