@@ -47,7 +47,7 @@ planned_exit = False
 if "-s" in sys.argv or "--setup" in sys.argv:
     setup_mode = True
 if not path.isfile(file_path + "/session.session") and not setup_mode:
-    raise Exception("Session file was not found. Retry with '-s' or '--setup' to create new")
+    raise FileNotFoundError("Session file was not found. Retry with '-s' or '--setup' to create new")
 
 client = TelegramClient(file_path + "/session", config['api']['id'], config['api']['hash'], app_version=VERSION)
 
@@ -178,7 +178,7 @@ async def handler(event):
 
 client.connect()
 if not client.is_user_authorized() and not setup_mode:
-    raise Exception("You are unauthorized. Retry with '-s' or '--setup' to authorize")
+    raise PermissionError("You are unauthorized. Retry with '-s' or '--setup' to authorize")
 log_str = f"Starting Pong v{VERSION}..."
 print(log_str)
 if config['service']['logging_enabled']:
