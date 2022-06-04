@@ -5,8 +5,6 @@ COPYRIGHT LESTER COVEY (me@lestercovey.ml) & ChernV (@otter18),
 2022
 '''''''''''''''''''''''''''''
 
-#  Copyright (c) Lester Covey (me@lestercovey.ml) & ChernV (@otter18), 2022
-
 import logging
 import sys
 from os import path
@@ -81,7 +79,7 @@ async def handler(event):
 
 		if config['service']['cronitor_integrated']:
 			cronitor.inform(sender, event.message.text, times_responded)
-
+			
 	except Exception as e:
 		sys.excepthook(type(e), e)
 

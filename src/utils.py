@@ -1,4 +1,4 @@
-#  Copyright (c) Lester Covey (me@lestercovey.ml) & ChernV (@otter18), 2022
+#  Copyright (c) ChernV (@otter18), 2022
 
 import enum
 
