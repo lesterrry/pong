@@ -3,22 +3,25 @@
 COPYRIGHT LESTER COVEY (me@lestercovey.ml),
 2022
 
+Logging made by ChernV (@otter18),
+2022
 '''''''''''''''''''''''''''''
 from os import path
 from telethon import TelegramClient, events, sync
 from telethon.tl.types import PeerUser
-from datetime import datetime
 import toml
 import sys
+import logging
 import gc
 
 CONFIG_FILE_NAME = "config"  # Your .toml config file name (like 'file')
-VERSION = "0.2.1-beta"
+VERSION = "0.2.2-beta"
 FOOTER = "\n---------------\nSent automatically with [Pong](https://github.com/lesterrry/pong)"
 
 if "-v" in sys.argv or "--version" in sys.argv:
 	print(f"Pong v{VERSION}")
 	exit(0)
+
 
 def my_except_hook(exctype, value, traceback=None):
 	if exctype is not KeyboardInterrupt:
@@ -27,12 +30,12 @@ def my_except_hook(exctype, value, traceback=None):
 		errstr = f"FATAL: {value}"
 		print(errstr, file=sys.stderr)
 		try:
-			log(errstr)
+			logging.exception(errstr)
 			cronitor_informstate(errstr, "fail")
 		except:
 			()
 		exit(1)
-sys.excepthook = my_except_hook
+
 
 file_path = path.dirname(path.dirname(path.realpath(__file__)))
 setup_mode = False
@@ -41,18 +44,20 @@ responded_to = []
 times_responded = 0
 planned_exit = False
 
+# logging setup
+logging.basicConfig(filename=path.join(file_path, 'log.txt'), encoding='utf-8', level=logging.INFO,
+					format='[%(asctime)s] %(levelname)s: %(message)s', datefmt='%a %d %b %H:%M')
+
+sys.excepthook = my_except_hook
+
 if "-s" in sys.argv or "--setup" in sys.argv:
 	setup_mode = True
 if not path.isfile(file_path + "/session.session") and not setup_mode:
-	raise Exception("Session file was not found. Retry with '-s' or '--setup' to create new")
+	raise FileNotFoundError("Session file was not found. Retry with '-s' or '--setup' to create new")
 
 client = TelegramClient(file_path + "/session", config['api']['id'], config['api']['hash'], app_version=VERSION)
 
-def log(text):
-	file_exists = path.isfile(file_path + "/log.txt")
-	with open(file_path + "/log.txt", 'a' if file_exists else 'w') as f:
-		dated = datetime.now().strftime("[%a %d %b %H:%M] ")
-		f.write(dated + text + "\n")
+
 def get_sender_name(sender):
 	sender_name = ""
 	if sender.first_name is not None and sender.last_name is not None:
@@ -64,32 +69,55 @@ def get_sender_name(sender):
 	else:
 		sender_name = f"<{sender.id}>"
 	return sender_name
+
+
 def get_log_string(sender, incoming):
 	return f"Responding to {get_sender_name(sender)} who wrote: '{incoming}'"
+
+
 def log_response(sender, incoming):
-	log(get_log_string(sender, incoming))
+	logging.info(get_log_string(sender, incoming))
+
 
 if config['service']['cronitor_integrated']:
 	import requests
 	import asyncio
 	import atexit
+
+
 	async def cronitor_heartbeat():
 		await asyncio.sleep(300)
 		while True:
 			cronitor_ping()
 			await asyncio.sleep(300)
+
+
 	def cronitor_ping():
-		requests.get(f"https://cronitor.link/p/{config['service']['cronitor_key']}/{config['service']['cronitor_id']}?host={config['service']['cronitor_hostname']}", timeout=10)
+		requests.get(
+			f"https://cronitor.link/p/{config['service']['cronitor_key']}/{config['service']['cronitor_id']}?host={config['service']['cronitor_hostname']}",
+			timeout=10)
+
+
 	def cronitor_inform(sender, incoming, tr):
 		message = get_log_string(sender, incoming)
-		requests.get(f"https://cronitor.link/p/{config['service']['cronitor_key']}/{config['service']['cronitor_id']}?host={config['service']['cronitor_hostname']}&message={message}&metric=count:{tr}", timeout=10)
+		requests.get(
+			f"https://cronitor.link/p/{config['service']['cronitor_key']}/{config['service']['cronitor_id']}?host={config['service']['cronitor_hostname']}&message={message}&metric=count:{tr}",
+			timeout=10)
+
+
 	def cronitor_informstate(message, state):
-		requests.get(f"https://cronitor.link/p/{config['service']['cronitor_key']}/{config['service']['cronitor_id']}?host={config['service']['cronitor_hostname']}&message={message}&state={state}", timeout=10)
+		requests.get(
+			f"https://cronitor.link/p/{config['service']['cronitor_key']}/{config['service']['cronitor_id']}?host={config['service']['cronitor_hostname']}&message={message}&state={state}",
+			timeout=10)
+
+
 	def cronitor_atexit():
 		if not planned_exit:
 			cronitor_informstate(f"Exiting Pong...", "complete")
 
+
 	atexit.register(cronitor_atexit)
+
 
 @client.on(events.NewMessage(incoming=True))
 async def handler(event):
@@ -123,15 +151,16 @@ async def handler(event):
 				ignore_phones.append(i[1:])
 			else:
 				ignore_ids.append(i)
-		if (sender.is_self 
-			or sender.bot 
-			or sender.support 
-			or str(sender.id) in ignore_ids 
-			or sender.username in ignore_usernames 
-			or sender.phone in ignore_phones
-			or (config['messages']['respond_only_once'] and sender.id in responded_to)):
+		if (sender.is_self
+				or sender.bot
+				or sender.support
+				or str(sender.id) in ignore_ids
+				or sender.username in ignore_usernames
+				or sender.phone in ignore_phones
+				or (config['messages']['respond_only_once'] and sender.id in responded_to)):
 			return
-		if 'for_known' in config['messages'] and (str(sender.id) in known_ids or sender.username in known_usernames or sender.phone in known_phones):
+		if 'for_known' in config['messages'] and (
+				str(sender.id) in known_ids or sender.username in known_usernames or sender.phone in known_phones):
 			await event.reply(config['messages']['for_known'] + FOOTER, link_preview=False)
 			responded_to.append(sender.id)
 		elif 'for_others' in config['messages']:
@@ -145,13 +174,14 @@ async def handler(event):
 	except Exception as e:
 		my_except_hook(type(e), e)
 
+
 client.connect()
 if not client.is_user_authorized() and not setup_mode:
-	raise Exception("You are unauthorized. Retry with '-s' or '--setup' to authorize")
+	raise PermissionError("You are unauthorized. Retry with '-s' or '--setup' to authorize")
 log_str = f"Starting Pong v{VERSION}..."
 print(log_str)
 if config['service']['logging_enabled']:
-	log(log_str)
+	logging.info(log_str)
 if config['service']['cronitor_integrated']:
 	cronitor_informstate(log_str, "run")
 del CONFIG_FILE_NAME, VERSION, setup_mode, log_str
