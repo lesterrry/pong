@@ -15,7 +15,7 @@ import logging
 import gc
 
 CONFIG_FILE_NAME = "config"  # Your .toml config file name (like 'file')
-VERSION = "0.2.1-beta"
+VERSION = "0.2.2-beta"
 FOOTER = "\n---------------\nSent automatically with [Pong](https://github.com/lesterrry/pong)"
 
 if "-v" in sys.argv or "--version" in sys.argv:
