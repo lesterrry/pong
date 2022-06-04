@@ -46,7 +46,7 @@ planned_exit = False
 
 # logging setup
 logging.basicConfig(filename=path.join(file_path, 'log.txt'), encoding='utf-8', level=logging.INFO,
-                    format='[%(asctime)s] %(message)s', datefmt='%a %d %b %H:%M')
+                    format='[%(asctime)s] %(levelname)s: %(message)s', datefmt='%a %d %b %H:%M')
 
 sys.excepthook = my_except_hook
 
