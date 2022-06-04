@@ -1,16 +1,15 @@
 #  Copyright (c) Lester Covey (me@lestercovey.ml) & ChernV (@otter18), 2022
 
 import asyncio
-
 import requests
 
 from utils import get_log_string
 
 
-async def cronitor_heartbeat(cronitor_obj):
+async def cronitor_heartbeat(cronitor):
 	await asyncio.sleep(300)
 	while True:
-		cronitor_obj.cronitor_ping()
+		cronitor.cronitor_ping()
 		await asyncio.sleep(300)
 
 

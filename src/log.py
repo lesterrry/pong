@@ -37,4 +37,4 @@ def setup_excepthook(config, cronitor):
 
 	@atexit.register
 	def atexit_func():
-		cronitor.informstate(f"Exiting Pong...", "complete")
+		cronitor.informstate("Exiting Pong...", "complete")

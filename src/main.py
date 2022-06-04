@@ -1,4 +1,10 @@
 #!/usr/bin/env python3
+
+'''''''''''''''''''''''''''''
+COPYRIGHT LESTER COVEY (me@lestercovey.ml) & ChernV (@otter18),
+2022
+'''''''''''''''''''''''''''''
+
 #  Copyright (c) Lester Covey (me@lestercovey.ml) & ChernV (@otter18), 2022
 
 import logging
@@ -14,7 +20,7 @@ from log import log_response, setup_excepthook
 from utils import Phonebook, UserType
 
 CONFIG_FILE_NAME = "config"  # Your .toml config file name (like 'file')
-VERSION = "0.3.0-beta"
+VERSION = "1.0.0-beta"
 
 if "-v" in sys.argv or "--version" in sys.argv:
 	print(f"Pong v{VERSION}")
