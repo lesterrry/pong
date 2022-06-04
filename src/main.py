@@ -13,8 +13,10 @@ from cronitor_logging import Cronitor, cronitor_heartbeat
 from log import log_response, setup_excepthook
 from utils import Phonebook, UserType
 
+
 CONFIG_FILE_NAME = "config"  # Your .toml config file name (like 'file')
-VERSION = "0.2.3-beta"
+
+VERSION = "0.3.0-beta"
 
 if "-v" in sys.argv or "--version" in sys.argv:
     print(f"Pong v{VERSION}")
@@ -28,6 +30,7 @@ times_responded = 0
 
 cronitor = Cronitor(config) if config['service']['cronitor_integrated'] else None
 setup_excepthook(config, cronitor)
+
 
 if "-s" in sys.argv or "--setup" in sys.argv:
     setup_mode = True
