@@ -9,6 +9,7 @@ hash = ""
 respond_only_once = true
 for_known = "Hey you!"
 for_others = "Hey stranger!"
+footer = "\n---------------\nSent automatically with [Pong](https://github.com/lesterrry/pong)"
 
 # Specify people you know
 # Arrays accept usernames (like '@user'), phone numbers (like +1234...), ids (like 123)

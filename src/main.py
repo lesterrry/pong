@@ -84,6 +84,8 @@ async def handler(event):
 		sys.excepthook(type(e), e)
 
 
+# FIXME:
+# Warning emitted
 client.connect()
 if not client.is_user_authorized() and not setup_mode:
 	raise PermissionError("You are unauthorized. Retry with '-s' or '--setup' to authorize")
