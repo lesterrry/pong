@@ -13,7 +13,7 @@ import sys
 import gc
 
 CONFIG_FILE_NAME = "config"  # Your .toml config file name (like 'file')
-VERSION = "0.2.1-beta"
+VERSION = "0.2.1-beta-unsafe"
 FOOTER = "\n---------------\nSent automatically with [Pong](https://github.com/lesterrry/pong)"
 
 if "-v" in sys.argv or "--version" in sys.argv:
@@ -143,7 +143,8 @@ async def handler(event):
 		if config['service']['cronitor_integrated']:
 			cronitor_inform(sender, event.message.text, times_responded)
 	except Exception as e:
-		my_except_hook(type(e), e)
+		pass
+		#my_except_hook(type(e), e)
 
 client.connect()
 if not client.is_user_authorized() and not setup_mode:
