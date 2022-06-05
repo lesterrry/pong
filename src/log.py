@@ -27,7 +27,7 @@ def setup_excepthook(config, cronitor):
 		logging.exception(err_str)
 		if cronitor is not None:
 			try:
-				cronitor.cronitor_informstate(err_str, "fail")
+				cronitor.informstate(err_str, "fail")
 			except Exception:
 				pass
 
